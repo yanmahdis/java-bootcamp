@@ -1,12 +1,7 @@
 package model;
 
-import com.mysql.cj.xdevapi.InsertStatement;
-
-import javax.xml.transform.Result;
-import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Instant;
-import java.util.UUID;
 
 public class Database {
     protected Connection con;
@@ -14,7 +9,7 @@ public class Database {
     public void createConnection() {
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
-            this.con = DriverManager.getConnection("jdbc:mysql://localhost:3306/testdb?useSSL=false","user","password");
+            this.con = this.getConnection();
             System.out.println("Database Connection Success");
         } catch (ClassNotFoundException ex) {
             System.out.println("Class Not Found Exception :" + ex);
@@ -38,14 +33,17 @@ public class Database {
         }
     }
 
-    public void insertUser(String id, String name) {
+    public void insertUser(String id, String name) throws SQLException{
+        Statement stmt = null;
         try {
-            Statement stmt = this.con.createStatement();
+            stmt = this.con.createStatement();
             String insertQuery = String.format("INSERT INTO USERS (ID,NAME, MODIFIEDDATE) VALUES('%s','%s', %d)", id, name, this.getEpochNow());
             stmt.execute(insertQuery);
-            stmt.close();
         } catch (SQLException ex) {
             System.out.println("SQL Exception:" + ex);
+            throw ex;
+        } finally {
+            stmt.close();
         }
     }
 
@@ -120,5 +118,9 @@ public class Database {
 
     private Long getEpochNow() {
         return Instant.now().getEpochSecond();
+    }
+
+    public Connection getConnection() throws SQLException{
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/testdb?useSSL=false","user","password");
     }
 }
